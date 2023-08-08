@@ -893,7 +893,8 @@ class PyTreeCheckpointHandler(AsyncCheckpointHandler):
         _maybe_set_default_restore_types, structure, checkpoint_restore_args
     )
 
-    restored_item = asyncio.run(
+    loop = asyncio.get_event_loop()
+    restored_item = loop.run_until_complete(
         self._maybe_deserialize(structure, param_infos, checkpoint_restore_args)
     )
 
