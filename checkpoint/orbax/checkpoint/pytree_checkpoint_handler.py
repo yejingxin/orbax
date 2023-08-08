@@ -38,6 +38,8 @@ from orbax.checkpoint import utils
 from orbax.checkpoint import value_metadata
 from orbax.checkpoint.async_checkpoint_handler import AsyncCheckpointHandler
 from orbax.checkpoint.future import Future
+import nest_asyncio
+nest_asyncio.apply()
 
 
 
@@ -847,7 +849,7 @@ class PyTreeCheckpointHandler(AsyncCheckpointHandler):
           f'Requested directory for restore does not exist at {directory}'
       )
 
-    def _create_byte_limiter():
+    async def _create_byte_limiter():
       # Wrap creation in async function to avoid issues on python<=3.9.
       concurrent_bytes = self._concurrent_gb * 10**9
       # Construction must take place here so that it is within the same async
@@ -856,7 +858,7 @@ class PyTreeCheckpointHandler(AsyncCheckpointHandler):
       # for the entire restore call.
       return serialization._LimitInFlightBytes(concurrent_bytes)  # pylint: disable=protected-access
 
-    byte_limiter = _create_byte_limiter()
+    byte_limiter = asyncio.run(_create_byte_limiter())
     structure = self._get_internal_metadata(directory)
     # `checkpoint_restore_args` has a structure relative to the checkpoint,
     # while `restore_args` remains structured relative to the output.
@@ -893,8 +895,7 @@ class PyTreeCheckpointHandler(AsyncCheckpointHandler):
         _maybe_set_default_restore_types, structure, checkpoint_restore_args
     )
 
-    loop = asyncio.get_event_loop()
-    restored_item = loop.run_until_complete(
+    restored_item = asyncio.run(
         self._maybe_deserialize(structure, param_infos, checkpoint_restore_args)
     )
 
