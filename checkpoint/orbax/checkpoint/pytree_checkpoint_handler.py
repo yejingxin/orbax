@@ -847,7 +847,7 @@ class PyTreeCheckpointHandler(AsyncCheckpointHandler):
           f'Requested directory for restore does not exist at {directory}'
       )
 
-    async def _create_byte_limiter():
+    def _create_byte_limiter():
       # Wrap creation in async function to avoid issues on python<=3.9.
       concurrent_bytes = self._concurrent_gb * 10**9
       # Construction must take place here so that it is within the same async
@@ -856,7 +856,7 @@ class PyTreeCheckpointHandler(AsyncCheckpointHandler):
       # for the entire restore call.
       return serialization._LimitInFlightBytes(concurrent_bytes)  # pylint: disable=protected-access
 
-    byte_limiter = asyncio.run(_create_byte_limiter())
+    byte_limiter = _create_byte_limiter()
     structure = self._get_internal_metadata(directory)
     # `checkpoint_restore_args` has a structure relative to the checkpoint,
     # while `restore_args` remains structured relative to the output.
